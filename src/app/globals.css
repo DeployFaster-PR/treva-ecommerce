@@ -1,26 +1,364 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Force light mode and prevent system dark mode from affecting the site */
+html {
+  color-scheme: light only !important;
+  background-color: #ffffff;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #ffffff;
+  color: #0e0f13;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.6;
+}
+
+/* Prevent any dark mode media queries from activating */
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    background-color: #ffffff !important;
+    color: #0e0f13 !important;
+  }
+}
+
+/* Custom scrollbar with gold gradient */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #d4af37 0%, #edba13 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #c19b26 0%, #d4a813 100%);
+}
+
+/* TREVA Brand Colors */
+:root {
+  --treva-primary: #0a2342;
+  --treva-secondary: #f5f5f0;
+  --treva-accent: #046a38;
+  --treva-text: #0e0f13;
+  --treva-disabled: #f5f5f5;
+  --treva-gold-50: #fefce8;
+  --treva-gold-100: #fef3c7;
+  --treva-gold-200: #fde68a;
+  --treva-gold-300: #fcd34d;
+  --treva-gold-400: #edba13;
+  --treva-gold-500: #d4af37;
+  --treva-gold-600: #c19b26;
+  --treva-gold-700: #a78516;
+  --treva-gold-800: #8a6914;
+  --treva-gold-900: #735617;
+  --gradient-gold: linear-gradient(135deg, #d4af37 0%, #edba13 100%);
+  --gradient-gold-hover: linear-gradient(135deg, #c19b26 0%, #d4a813 100%);
+}
+
+/* Custom Tailwind Utilities */
+@layer utilities {
+  /* TREVA Brand Colors */
+  .bg-treva-primary {
+    background-color: var(--treva-primary);
+  }
+
+  .bg-treva-secondary {
+    background-color: var(--treva-secondary);
+  }
+
+  .bg-treva-accent {
+    background-color: var(--treva-accent);
+  }
+
+  .bg-treva-text {
+    background-color: var(--treva-text);
+  }
+
+  .bg-treva-disabled {
+    background-color: var(--treva-disabled);
+  }
+
+  .text-treva-primary {
+    color: var(--treva-primary);
+  }
+
+  .text-treva-secondary {
+    color: var(--treva-secondary);
+  }
+
+  .text-treva-accent {
+    color: var(--treva-accent);
+  }
+
+  .text-treva-text {
+    color: var(--treva-text);
+  }
+
+  .text-treva-disabled {
+    color: var(--treva-disabled);
+  }
+
+  .border-treva-primary {
+    border-color: var(--treva-primary);
+  }
+
+  .border-treva-secondary {
+    border-color: var(--treva-secondary);
+  }
+
+  .border-treva-accent {
+    border-color: var(--treva-accent);
+  }
+
+  .border-treva-text {
+    border-color: var(--treva-text);
+  }
+
+  .border-treva-disabled {
+    border-color: var(--treva-disabled);
+  }
+
+  /* TREVA Gold Colors */
+  .bg-treva-gold-50 {
+    background-color: var(--treva-gold-50);
+  }
+
+  .bg-treva-gold-100 {
+    background-color: var(--treva-gold-100);
+  }
+
+  .bg-treva-gold-200 {
+    background-color: var(--treva-gold-200);
+  }
+
+  .bg-treva-gold-300 {
+    background-color: var(--treva-gold-300);
+  }
+
+  .bg-treva-gold-400 {
+    background-color: var(--treva-gold-400);
+  }
+
+  .bg-treva-gold-500 {
+    background-color: var(--treva-gold-500);
+  }
+
+  .bg-treva-gold-600 {
+    background-color: var(--treva-gold-600);
+  }
+
+  .bg-treva-gold-700 {
+    background-color: var(--treva-gold-700);
+  }
+
+  .bg-treva-gold-800 {
+    background-color: var(--treva-gold-800);
+  }
+
+  .bg-treva-gold-900 {
+    background-color: var(--treva-gold-900);
+  }
+
+  .text-treva-gold-50 {
+    color: var(--treva-gold-50);
+  }
+
+  .text-treva-gold-100 {
+    color: var(--treva-gold-100);
+  }
+
+  .text-treva-gold-200 {
+    color: var(--treva-gold-200);
+  }
+
+  .text-treva-gold-300 {
+    color: var(--treva-gold-300);
+  }
+
+  .text-treva-gold-400 {
+    color: var(--treva-gold-400);
+  }
+
+  .text-treva-gold-500 {
+    color: var(--treva-gold-500);
+  }
+
+  .text-treva-gold-600 {
+    color: var(--treva-gold-600);
+  }
+
+  .text-treva-gold-700 {
+    color: var(--treva-gold-700);
+  }
+
+  .text-treva-gold-800 {
+    color: var(--treva-gold-800);
+  }
+
+  .text-treva-gold-900 {
+    color: var(--treva-gold-900);
+  }
+
+  .border-treva-gold-50 {
+    border-color: var(--treva-gold-50);
+  }
+
+  .border-treva-gold-100 {
+    border-color: var(--treva-gold-100);
+  }
+
+  .border-treva-gold-200 {
+    border-color: var(--treva-gold-200);
+  }
+
+  .border-treva-gold-300 {
+    border-color: var(--treva-gold-300);
+  }
+
+  .border-treva-gold-400 {
+    border-color: var(--treva-gold-400);
+  }
+
+  .border-treva-gold-500 {
+    border-color: var(--treva-gold-500);
+  }
+
+  .border-treva-gold-600 {
+    border-color: var(--treva-gold-600);
+  }
+
+  .border-treva-gold-700 {
+    border-color: var(--treva-gold-700);
+  }
+
+  .border-treva-gold-800 {
+    border-color: var(--treva-gold-800);
+  }
+
+  .border-treva-gold-900 {
+    border-color: var(--treva-gold-900);
+  }
+
+  /* Gradient Backgrounds */
+  .bg-gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .bg-gradient-gold-hover {
+    background: var(--gradient-gold-hover);
+  }
+
+  /* Hover variations */
+  .hover\:bg-treva-primary:hover {
+    background-color: var(--treva-primary);
+  }
+
+  .hover\:bg-treva-secondary:hover {
+    background-color: var(--treva-secondary);
+  }
+
+  .hover\:bg-treva-accent:hover {
+    background-color: var(--treva-accent);
+  }
+
+  .hover\:bg-treva-text:hover {
+    background-color: var(--treva-text);
+  }
+
+  .hover\:bg-treva-gold-500:hover {
+    background-color: var(--treva-gold-500);
+  }
+
+  .hover\:bg-treva-gold-600:hover {
+    background-color: var(--treva-gold-600);
+  }
+
+  .hover\:text-treva-primary:hover {
+    color: var(--treva-primary);
+  }
+
+  .hover\:text-treva-secondary:hover {
+    color: var(--treva-secondary);
+  }
+
+  .hover\:text-treva-accent:hover {
+    color: var(--treva-accent);
+  }
+
+  .hover\:text-treva-text:hover {
+    color: var(--treva-text);
+  }
+
+  .hover\:text-treva-gold-500:hover {
+    color: var(--treva-gold-500);
+  }
+
+  .hover\:text-treva-gold-600:hover {
+    color: var(--treva-gold-600);
+  }
+
+  /* Focus ring colors */
+  .focus\:ring-treva-primary:focus {
+    --tw-ring-color: var(--treva-primary);
+  }
+
+  .focus\:ring-treva-accent:focus {
+    --tw-ring-color: var(--treva-accent);
+  }
+
+  .focus\:ring-treva-gold-500:focus {
+    --tw-ring-color: var(--treva-gold-500);
+  }
+
+  /* Custom shadows */
+  .shadow-gold {
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  }
+
+  .shadow-gold-lg {
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+  }
+
+  /* Custom animations */
+  .animate-hover-lift {
+    animation: hover-lift 0.3s ease-in-out;
+  }
+
+  @keyframes hover-lift {
+    from {
+      transform: translateY(0px);
+    }
+    to {
+      transform: translateY(-2px);
+    }
+  }
+
+  /* Override default colors to ensure light theme */
+  .bg-white {
+    background-color: #ffffff;
+  }
+
+  .bg-black {
+    background-color: #0e0f13;
+  }
+
+  .text-white {
+    color: #ffffff;
+  }
+
+  .text-black {
+    color: #0e0f13;
+  }
 }
