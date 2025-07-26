@@ -11,8 +11,8 @@ import { StorageCleanupProvider } from '@/components/StorageCleanupProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Treva Ecommerce App',
-  description: 'Ecommerce',
+  title: 'Deploy Faster Ecommerce Website',
+  description: 'Modern Ecommerce Store built by Deploy Faster',
 };
 
 export default function RootLayout({

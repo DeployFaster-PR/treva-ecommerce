@@ -1,0 +1,6 @@
+[build.processing.secrets]
+  ignored_patterns = [
+    "NEXT_PUBLIC_*",
+    "*.pack",
+    ".gitignore"
+  ]
