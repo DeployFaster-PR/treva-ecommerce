@@ -6,9 +6,10 @@ import { Ring } from '@/types/rings';
 import YouMayAlsoLike from '../YouMayAlsoLike';
 
 interface RingPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getRing(slug: string): Promise<Ring | null> {

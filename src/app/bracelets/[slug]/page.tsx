@@ -6,9 +6,10 @@ import { Bracelet } from '@/types/bracelets';
 import YouMayAlsoLike from '../YouMayAlsoLike';
 
 interface BraceletPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getBracelet(slug: string): Promise<Bracelet | null> {

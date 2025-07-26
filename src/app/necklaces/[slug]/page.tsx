@@ -6,9 +6,10 @@ import { Necklace } from '@/types/necklaces';
 import YouMayAlsoLike from '../YouMayAlsoLike';
 
 interface NecklacePageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getNecklace(slug: string): Promise<Necklace | null> {

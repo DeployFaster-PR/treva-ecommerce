@@ -5,9 +5,10 @@ import EarringDetails from './EarringDetails';
 import { Earring } from '@/types/earrings';
 
 interface EarringPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getEarring(slug: string): Promise<Earring | null> {
