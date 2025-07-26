@@ -4,6 +4,7 @@
 html {
   color-scheme: light only !important;
   background-color: #ffffff;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -66,6 +67,28 @@ body {
   --gradient-gold: linear-gradient(135deg, #d4af37 0%, #edba13 100%);
   --gradient-gold-hover: linear-gradient(135deg, #c19b26 0%, #d4a813 100%);
 }
+
+/* @layer components {
+  .btn-primary {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline;
+  }
+
+  .form-label {
+    @apply block text-gray-700 text-sm font-bold mb-2;
+  }
+
+  .alert-error {
+    @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
+  }
+
+  .alert-success {
+    @apply bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded;
+  }
+} */
 
 /* Custom Tailwind Utilities */
 @layer utilities {

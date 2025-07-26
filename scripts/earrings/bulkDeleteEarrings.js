@@ -8,7 +8,7 @@ const client = createClient({
   projectId: 'projectid',
   dataset: 'production',
   apiVersion: '2024-01-01',
-  token: 'token',
+  token: 'tokenvalue',
   useCdn: false,
 });
 

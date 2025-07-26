@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+} from 'lucide-react';
 import {
   Earring,
   EarringFilters,
@@ -10,17 +17,27 @@ import {
   EARRING_MATERIALS,
   EARRING_STONES,
   EARRING_COLORS,
+  EARRING_SIZES,
   EARRING_PRICE_RANGES,
   EARRING_SORT_OPTIONS,
   CATEGORY_IMAGES,
 } from '@/types/earrings';
 import { client } from '@/lib/sanity';
+import { useCartStore } from '@/stores/cart-store';
+import { useWishlistStore } from '@/stores/wishlist-store';
+import {
+  earringToCartItem,
+  earringToWishlistItem,
+} from '@/lib/product-helpers';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface EarringListingProps {
   initialEarrings: Earring[];
   totalCount: number;
 }
+
+const PRODUCTS_PER_PAGE = 12;
 
 const EarringListing: React.FC<EarringListingProps> = ({
   initialEarrings,
@@ -28,11 +45,21 @@ const EarringListing: React.FC<EarringListingProps> = ({
 }) => {
   const [earrings, setEarrings] = useState<Earring[]>(initialEarrings);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(Math.ceil(totalCount / 24));
+  const [totalPages, setTotalPages] = useState(
+    Math.ceil(totalCount / PRODUCTS_PER_PAGE)
+  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState<EarringsSortBy>('NEW ARRIVALS');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Cart and Wishlist stores
+  const { addItem: addToCart, openCart } = useCartStore();
+  const {
+    addItem: addToWishlist,
+    removeItem: removeFromWishlist,
+    isInWishlist,
+  } = useWishlistStore();
 
   // Filter expansion states
   const [expandedFilters, setExpandedFilters] = useState({
@@ -40,6 +67,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
     material: false,
     stone: false,
     color: false,
+    size: false,
     price: false,
   });
 
@@ -48,15 +76,39 @@ const EarringListing: React.FC<EarringListingProps> = ({
     material: [],
     stone: [],
     color: [],
+    size: [],
     priceRange: [],
     category: [],
     inStock: undefined,
   });
 
-  // Sort options without "PRICE: HIGH TO LOW"
-  const sortOptions = EARRING_SORT_OPTIONS.filter(
-    (option) => option !== 'PRICE: HIGH TO LOW'
-  );
+  const sortOptions = EARRING_SORT_OPTIONS;
+
+  // Cart and Wishlist handlers
+  const handleAddToBag = (e: React.MouseEvent, earring: Earring) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!earring.inStock) return;
+
+    const cartItem = earringToCartItem(earring);
+    addToCart(cartItem);
+    openCart();
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent, earring: Earring) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isWishlisted = isInWishlist(earring._id, earring.size);
+
+    if (isWishlisted) {
+      removeFromWishlist(earring._id, earring.size);
+    } else {
+      const wishlistItem = earringToWishlistItem(earring);
+      addToWishlist(wishlistItem);
+    }
+  };
 
   // Fetch earrings based on filters and sort
   const fetchEarrings = useCallback(
@@ -82,8 +134,36 @@ const EarringListing: React.FC<EarringListingProps> = ({
           query += ` && color in [${filters.color.map((c) => `"${c}"`).join(', ')}]`;
         }
 
+        if (filters.size && filters.size.length > 0) {
+          query += ` && size in [${filters.size.map((s) => `"${s}"`).join(', ')}]`;
+        }
+
         if (filters.category && filters.category.length > 0) {
           query += ` && category in [${filters.category.map((c) => `"${c}"`).join(', ')}]`;
+        }
+
+        if (filters.priceRange && filters.priceRange.length > 0) {
+          const priceConditions: string[] = [];
+
+          filters.priceRange.forEach((range) => {
+            // Extract numbers from strings like "£25 - £50"
+            const numbers = range.match(/[\d.]+/g);
+            if (numbers && numbers.length >= 2) {
+              const min = parseFloat(numbers[0]);
+              const max = parseFloat(numbers[1]);
+              priceConditions.push(`(price >= ${min} && price <= ${max})`);
+            } else if (range.toLowerCase().includes('over')) {
+              const overNumber = range.match(/[\d.]+/);
+              if (overNumber) {
+                const min = parseFloat(overNumber[0]);
+                priceConditions.push(`price >= ${min}`);
+              }
+            }
+          });
+
+          if (priceConditions.length > 0) {
+            query += ` && (${priceConditions.join(' || ')})`;
+          }
         }
 
         query += `] {
@@ -99,6 +179,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
         material,
         stone,
         color,
+        size,
         category,
         featured,
         _createdAt
@@ -112,13 +193,16 @@ const EarringListing: React.FC<EarringListingProps> = ({
           case 'PRICE: LOW TO HIGH':
             query += ` | order(price asc)`;
             break;
+          case 'PRICE: HIGH TO LOW':
+            query += ` | order(price desc)`;
+            break;
           case 'TOP MATCH':
             query += ` | order(featured desc, _createdAt desc)`;
             break;
         }
 
-        const start = (page - 1) * 24;
-        const end = start + 24;
+        const start = (page - 1) * PRODUCTS_PER_PAGE;
+        const end = start + PRODUCTS_PER_PAGE;
         query += `[${start}...${end}]`;
 
         const result = await client.fetch(query);
@@ -127,7 +211,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
         // Get total count
         const countQuery = query.split(']')[0] + ']';
         const total = await client.fetch(`count(${countQuery})`);
-        setTotalPages(Math.ceil(total / 24));
+        setTotalPages(Math.ceil(total / PRODUCTS_PER_PAGE));
       } catch (error) {
         console.error('Error fetching earrings:', error);
       } finally {
@@ -135,7 +219,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
       }
     },
     [filters, sortBy]
-  ); // Dependencies that fetchEarrings uses
+  );
 
   useEffect(() => {
     fetchEarrings(currentPage);
@@ -176,6 +260,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
       material: [],
       stone: [],
       color: [],
+      size: [],
       priceRange: [],
       category: [],
       inStock: undefined,
@@ -191,6 +276,8 @@ const EarringListing: React.FC<EarringListingProps> = ({
   };
 
   const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
     const pages = [];
     const maxVisiblePages = 7;
 
@@ -217,13 +304,13 @@ const EarringListing: React.FC<EarringListingProps> = ({
     }
 
     return (
-      <div className="flex justify-center items-center space-x-2 mt-12">
+      <div className="flex justify-center items-center gap-2 mt-12">
         <button
           onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="p-2 rounded-full border border-gray-300 disabled:opacity-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
         >
-          <ChevronDown className="rotate-90 w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
 
         {pages.map((page, index) => (
@@ -232,11 +319,14 @@ const EarringListing: React.FC<EarringListingProps> = ({
             onClick={() =>
               typeof page === 'number' ? setCurrentPage(page) : null
             }
-            className={`w-10 h-10 rounded-full ${
+            disabled={typeof page !== 'number'}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               page === currentPage
-                ? 'bg-yellow-400 text-black'
-                : 'border border-gray-300 hover:bg-gray-100'
-            } ${typeof page !== 'number' ? 'cursor-default' : ''}`}
+                ? 'bg-yellow-400 text-black font-medium'
+                : typeof page === 'number'
+                  ? 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+                  : 'cursor-default text-gray-400'
+            }`}
           >
             {page}
           </button>
@@ -245,9 +335,9 @@ const EarringListing: React.FC<EarringListingProps> = ({
         <button
           onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-full border border-gray-300 disabled:opacity-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
         >
-          <ChevronDown className="-rotate-90 w-4 h-4" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     );
@@ -287,35 +377,94 @@ const EarringListing: React.FC<EarringListingProps> = ({
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Earrings</h1>
         <p className="text-gray-600">
-          Find your perfect pair, Earrings for every style, every occasion.
+          Find your perfect earring, Earrings for every style, every occasion.
         </p>
       </div>
 
       {/* Category Navigation */}
-      <div className="grid grid-cols-7 gap-2 mb-8">
-        {EARRING_CATEGORIES.map((category) => (
+      <div className="mb-8">
+        {/* Desktop View */}
+        <div className="hidden lg:grid lg:grid-cols-7 gap-2">
+          {EARRING_CATEGORIES.map((category) => {
+            const isActive = filters.category?.includes(category) || false;
+            return (
+              <div
+                key={category}
+                className={`relative cursor-pointer transition-all duration-200 ${
+                  isActive ? 'earring-2 earring-green-800 earring-offset-2' : ''
+                }`}
+                onClick={() => handleArrayFilterChange('category', category)}
+              >
+                <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                  <Image
+                    src={CATEGORY_IMAGES[category]}
+                    alt={category}
+                    width={200}
+                    height={200}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div
+                  className="absolute bottom-2 left-2 text-white text-sm font-medium"
+                  style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
+                >
+                  {category}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tablet and Mobile View */}
+        <div className="lg:hidden relative">
           <div
-            key={category}
-            className="relative cursor-pointer"
-            onClick={() => handleArrayFilterChange('category', category)}
+            className="flex gap-2 overflow-x-auto scrollbar-hide pb-2"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
-            <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
-              <Image
-                src={CATEGORY_IMAGES[category]}
-                alt={category}
-                width={200}
-                height={200}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div
-              className="absolute bottom-2 left-2 text-white text-sm font-medium"
-              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
-            >
-              {category}
-            </div>
+            {EARRING_CATEGORIES.map((category, index) => {
+              const isActive = filters.category?.includes(category) || false;
+              return (
+                <div
+                  key={category}
+                  className={`relative flex-none cursor-pointer transition-all duration-200 ${
+                    isActive
+                      ? 'earring-2 earring-green-800 earring-offset-2'
+                      : ''
+                  }`}
+                  style={{
+                    width: '120px',
+                    marginRight:
+                      index === EARRING_CATEGORIES.length - 1 ? '16px' : '0px',
+                  }}
+                  onClick={() => handleArrayFilterChange('category', category)}
+                >
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                    <Image
+                      src={CATEGORY_IMAGES[category]}
+                      alt={category}
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div
+                    className="absolute bottom-2 left-2 text-white text-sm font-medium"
+                    style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
+                  >
+                    {category}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
+
+          {/* Fade indicator for scrollable content */}
+          <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -520,6 +669,36 @@ const EarringListing: React.FC<EarringListingProps> = ({
                 )}
               </div>
 
+              {/* Size Filter */}
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleFilterExpansion('size')}
+                  className="flex justify-between items-center w-full py-2 font-medium"
+                >
+                  <span>Size</span>
+                  {expandedFilters.size ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                {expandedFilters.size && (
+                  <div className="mt-3 space-y-2">
+                    {EARRING_SIZES.map((size) => (
+                      <label key={size} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={filters.size?.includes(size) || false}
+                          onChange={() => handleArrayFilterChange('size', size)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">Size {size}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Price Filter */}
               <div className="mb-6">
                 <button
@@ -559,7 +738,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
                 onClick={clearFilters}
                 className="w-full bg-yellow-400 text-black py-2 px-4 rounded-md hover:bg-yellow-500 font-medium"
               >
-                View Results
+                Clear all filters
               </button>
             </div>
           </div>
@@ -568,8 +747,8 @@ const EarringListing: React.FC<EarringListingProps> = ({
         {/* Product Grid */}
         <div className="flex-1">
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(12)].map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -578,71 +757,97 @@ const EarringListing: React.FC<EarringListingProps> = ({
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {earrings.map((earring) => {
                 const imageUrl = getImageUrl(earring);
+                const isWishlisted = isInWishlist(earring._id, earring.size);
 
                 return (
                   <div key={earring._id} className="group">
-                    <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={earring.name}
-                          width={400}
-                          height={400}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400">No Image</span>
-                        </div>
-                      )}
+                    <Link href={`/earrings/${earring.slug.current}`}>
+                      <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 cursor-pointer">
+                        {imageUrl ? (
+                          <Image
+                            src={imageUrl}
+                            alt={earring.name}
+                            width={400}
+                            height={400}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-400">No Image</span>
+                          </div>
+                        )}
 
-                      {!earring.inStock && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <span className="text-white font-semibold">
-                            Out of Stock
-                          </span>
-                        </div>
-                      )}
+                        {!earring.inStock && (
+                          <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20">
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-2">
+                              <span className="text-white font-medium text-sm tracking-wide">
+                                Out of Stock
+                              </span>
+                            </div>
+                          </div>
+                        )}
 
-                      <button className="absolute bottom-4 right-4 bg-yellow-400 text-black px-4 py-2 rounded-xl text-sm font-medium hover:bg-yellow-500 transition-colors">
-                        Add to bag
-                      </button>
-                    </div>
+                        {/* Wishlist Button */}
+                        <button
+                          className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center transition-colors z-10"
+                          onClick={(e) => handleToggleWishlist(e, earring)}
+                        >
+                          <Heart
+                            className={`w-5 h-5 transition-colors ${
+                              isWishlisted
+                                ? 'fill-red-500 text-red-500'
+                                : 'text-gray-600'
+                            }`}
+                          />
+                        </button>
 
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">
-                        {earring.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-2">
-                        {earring.material}, {earring.stone}
-                      </p>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-600 text-sm">
-                          {earring.currency === 'GBP'
-                            ? '£'
-                            : earring.currency === 'USD'
-                              ? '$'
-                              : '€'}
-                          {earring.price}
-                        </span>
-                        {earring.originalPrice && (
-                          <span className="text-gray-400 line-through text-sm">
+                        <button
+                          className="absolute bottom-4 right-4 bg-yellow-400 text-black px-4 py-2 rounded-xl text-sm font-medium hover:bg-yellow-500 transition-colors z-10 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          onClick={(e) => handleAddToBag(e, earring)}
+                          disabled={!earring.inStock}
+                        >
+                          {earring.inStock ? 'Add to bag' : 'Out of Stock'}
+                        </button>
+                      </div>
+                    </Link>
+
+                    <Link href={`/earrings/${earring.slug.current}`}>
+                      <div className="cursor-pointer">
+                        <h3 className="font-semibold text-lg mb-1 hover:text-gray-600 transition-colors">
+                          {earring.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2">
+                          {earring.material}, {earring.stone}, Size{' '}
+                          {earring.size}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600 text-sm">
                             {earring.currency === 'GBP'
                               ? '£'
                               : earring.currency === 'USD'
                                 ? '$'
                                 : '€'}
-                            {earring.originalPrice}
+                            {earring.price}
                           </span>
-                        )}
+                          {earring.originalPrice && (
+                            <span className="text-gray-400 line-through text-sm">
+                              {earring.currency === 'GBP'
+                                ? '£'
+                                : earring.currency === 'USD'
+                                  ? '$'
+                                  : '€'}
+                              {earring.originalPrice}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </div>
                 );
               })}
@@ -658,7 +863,7 @@ const EarringListing: React.FC<EarringListingProps> = ({
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && renderPagination()}
+          {renderPagination()}
         </div>
       </div>
     </div>

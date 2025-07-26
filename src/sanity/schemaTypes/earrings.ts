@@ -6,6 +6,7 @@ import {
   EARRING_STONES,
   EARRING_COLORS,
   EARRING_CATEGORIES,
+  EARRING_SIZES,
 } from '@/types/earrings';
 
 // Earring Review Schema
@@ -157,6 +158,18 @@ export const earring = defineType({
         list: EARRING_CATEGORIES.map((category) => ({
           title: category,
           value: category,
+        })),
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'size',
+      title: 'Size',
+      type: 'string',
+      options: {
+        list: EARRING_SIZES.map((size) => ({
+          title: size,
+          value: size,
         })),
       },
       validation: (Rule) => Rule.required(),
@@ -314,17 +327,18 @@ export const earring = defineType({
   preview: {
     select: {
       title: 'name',
-      media: 'mainImageUrl',
+      // media: 'mainImageUrl',
       price: 'price',
       currency: 'currency',
       inStock: 'inStock',
+      size: 'size',
     },
     prepare(selection) {
-      const { title, media, price, currency, inStock } = selection;
+      const { title, price, currency, inStock, size } = selection;
       return {
         title: title,
-        subtitle: `${currency === 'GBP' ? '£' : currency === 'USD' ? '$' : '€'}${price} - ${inStock ? 'In Stock' : 'Out of Stock'}`,
-        media: media,
+        subtitle: `${currency === 'GBP' ? '£' : currency === 'USD' ? '$' : '€'}${price} - Size ${size} - ${inStock ? 'In Stock' : 'Out of Stock'}`,
+        // media: media,
       };
     },
   },
@@ -349,6 +363,16 @@ export const earring = defineType({
       title: 'Price High to Low',
       name: 'priceHighToLow',
       by: [{ field: 'price', direction: 'desc' }],
+    },
+    {
+      title: 'Size (Small to Large)',
+      name: 'sizeAsc',
+      by: [{ field: 'size', direction: 'asc' }],
+    },
+    {
+      title: 'Size (Large to Small)',
+      name: 'sizeDesc',
+      by: [{ field: 'size', direction: 'desc' }],
     },
     {
       title: 'Newest First',

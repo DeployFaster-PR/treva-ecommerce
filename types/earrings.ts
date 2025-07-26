@@ -35,6 +35,7 @@ export interface Earring {
   stone: EarringStone;
   color: EarringColor;
   category: EarringCategory;
+  size: EarringSize;
 
   // Images - Using URL strings instead of Sanity image objects
   mainImageUrl: string;
@@ -104,6 +105,8 @@ export type EarringColor =
   | 'None'
   | 'White';
 
+export type EarringSize = '3' | '4' | '4.5' | '5' | '5.5' | '6' | '6.5';
+
 export type EarringCategory =
   | 'Stud'
   | 'Hoops'
@@ -135,6 +138,7 @@ export interface EarringFilters {
   color?: EarringColor[];
   priceRange?: EarringPriceRange[];
   category?: EarringCategory[];
+  size?: EarringSize[];
   inStock?: boolean;
 }
 
@@ -185,6 +189,16 @@ export const EARRING_COLORS: EarringColor[] = [
   'Green',
   'None',
   'White',
+];
+
+export const EARRING_SIZES: EarringSize[] = [
+  '3',
+  '4',
+  '4.5',
+  '5',
+  '5.5',
+  '6',
+  '6.5',
 ];
 
 export const EARRING_CATEGORIES: EarringCategory[] = [

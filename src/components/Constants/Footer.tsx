@@ -2,16 +2,29 @@
 
 import { useState } from 'react';
 import { Facebook, Instagram, X, Linkedin } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle newsletter signup
-    console.log('Newsletter signup:', email);
-    setEmail('');
-  };
+  const paymentMethods = [
+    {
+      name: 'Paystack',
+      logo: 'https://res.cloudinary.com/dfwty72r9/image/upload/v1753463609/Paystack-logo-768x427_x6ksgr.png',
+      alt: 'Paystack payment method',
+    },
+    {
+      name: 'Mastercard',
+      logo: 'https://res.cloudinary.com/dfwty72r9/image/upload/v1753463608/mastercard_dvvedf.png',
+      alt: 'Mastercard payment method',
+    },
+    {
+      name: 'Visa',
+      logo: 'https://res.cloudinary.com/dfwty72r9/image/upload/v1753463608/visa_ntaace.png',
+      alt: 'Visa payment method',
+    },
+  ];
 
   return (
     <footer className="bg-treva-primary text-white">
@@ -33,12 +46,12 @@ const Footer = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email to register"
                     className="flex-1 px-2 sm:px-4 py-3 text-gray-900 placeholder-gray-700 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm sm:text-base min-w-0"
-                    required
+                    disabled
                   />
                   <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className="bg-gradient-gold hover:bg-gradient-gold-hover px-3 sm:px-5 py-3 rounded-4xl font-medium text-white transition-all duration-300 whitespace-nowrap text-sm sm:text-base shrink-0"
+                    type="button"
+                    className="bg-gradient-gold hover:bg-gradient-gold-hover px-3 sm:px-5 py-3 rounded-4xl font-medium text-white transition-all duration-300 whitespace-nowrap text-sm sm:text-base shrink-0 cursor-not-allowed opacity-75"
+                    disabled
                   >
                     SUBMIT
                   </button>
@@ -52,23 +65,22 @@ const Footer = () => {
               can opt out at any time.
             </p>
 
-            {/* Country/Currency Selector */}
-            <div className="mb-6">
-              <select className="bg-white text-treva-text px-4 py-3 rounded-lg border-0 focus:ring-2 focus:ring-treva-accent outline-none w-full max-w-xs">
-                <option>🇬🇧 United Kingdom (GBP £)</option>
-                <option>🇺🇸 United States (USD $)</option>
-                <option>🇪🇺 European Union (EUR €)</option>
-              </select>
-            </div>
-
             {/* Payment Methods */}
-            <div className="flex space-x-2">
-              <div className="bg-white rounded px-3 py-2 flex items-center">
-                <span className="text-blue-600 font-bold text-sm">PayPal</span>
-              </div>
-              <div className="bg-white rounded px-3 py-2 flex items-center">
-                <span className="text-blue-600 font-bold text-sm">VISA</span>
-              </div>
+            <div className="flex space-x-3">
+              {paymentMethods.map((method, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg px-4 py-3 flex items-center justify-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+                >
+                  <Image
+                    src={method.logo}
+                    alt={method.alt}
+                    width={80}
+                    height={50}
+                    className="h-6 w-auto object-contain"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
@@ -80,12 +92,12 @@ const Footer = () => {
                 <h3 className="font-medium mb-4">Help</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="/#faq"
                       className="hover:text-gray-300 transition-colors"
                     >
                       FAQs
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <a
@@ -174,36 +186,36 @@ const Footer = () => {
                 <h3 className="font-medium mb-4">Shop Products</h3>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="/bracelets"
                       className="hover:text-gray-300 transition-colors"
                     >
                       Bracelets
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="necklaces"
                       className="hover:text-gray-300 transition-colors"
                     >
                       Necklaces
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="earrings"
                       className="hover:text-gray-300 transition-colors"
                     >
                       Earrings
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="rings"
                       className="hover:text-gray-300 transition-colors"
                     >
                       Rings
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
