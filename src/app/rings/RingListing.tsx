@@ -112,75 +112,101 @@ const RingListing: React.FC<RingListingProps> = ({
     async (page: number = 1) => {
       setIsLoading(true);
       try {
-        let query = `*[_type == "ring" && active == true`;
+        // Build query with proper escaping and error handling
+        const queryConditions = ['_type == "ring"', 'active == true'];
 
-        // Add filters to query
+        // Add filters to query conditions
         if (filters.inStock) {
-          query += ` && inStock == true`;
+          queryConditions.push('inStock == true');
         }
 
         if (filters.material && filters.material.length > 0) {
-          query += ` && material in [${filters.material.map((m) => `"${m}"`).join(', ')}]`;
+          const materialFilter = filters.material
+            .map((m) => `"${m.replace(/"/g, '\\"')}"`)
+            .join(', ');
+          queryConditions.push(`material in [${materialFilter}]`);
         }
 
         if (filters.stone && filters.stone.length > 0) {
-          query += ` && stone in [${filters.stone.map((s) => `"${s}"`).join(', ')}]`;
+          const stoneFilter = filters.stone
+            .map((s) => `"${s.replace(/"/g, '\\"')}"`)
+            .join(', ');
+          queryConditions.push(`stone in [${stoneFilter}]`);
         }
 
         if (filters.color && filters.color.length > 0) {
-          query += ` && color in [${filters.color.map((c) => `"${c}"`).join(', ')}]`;
+          const colorFilter = filters.color
+            .map((c) => `"${c.replace(/"/g, '\\"')}"`)
+            .join(', ');
+          queryConditions.push(`color in [${colorFilter}]`);
         }
 
         if (filters.size && filters.size.length > 0) {
-          query += ` && size in [${filters.size.map((s) => `"${s}"`).join(', ')}]`;
+          const sizeFilter = filters.size
+            .map((s) => `"${s.replace(/"/g, '\\"')}"`)
+            .join(', ');
+          queryConditions.push(`size in [${sizeFilter}]`);
         }
 
         if (filters.category && filters.category.length > 0) {
-          query += ` && category in [${filters.category.map((c) => `"${c}"`).join(', ')}]`;
+          const categoryFilter = filters.category
+            .map((c) => `"${c.replace(/"/g, '\\"')}"`)
+            .join(', ');
+          queryConditions.push(`category in [${categoryFilter}]`);
         }
 
         if (filters.priceRange && filters.priceRange.length > 0) {
           const priceConditions: string[] = [];
 
           filters.priceRange.forEach((range) => {
-            // Extract numbers from strings like "£25 - £50"
-            const numbers = range.match(/[\d.]+/g);
-            if (numbers && numbers.length >= 2) {
-              const min = parseFloat(numbers[0]);
-              const max = parseFloat(numbers[1]);
-              priceConditions.push(`(price >= ${min} && price <= ${max})`);
-            } else if (range.toLowerCase().includes('over')) {
-              const overNumber = range.match(/[\d.]+/);
-              if (overNumber) {
-                const min = parseFloat(overNumber[0]);
-                priceConditions.push(`price >= ${min}`);
+            try {
+              // Extract numbers from strings like "£25 - £50"
+              const numbers = range.match(/[\d.]+/g);
+              if (numbers && numbers.length >= 2) {
+                const min = parseFloat(numbers[0]);
+                const max = parseFloat(numbers[1]);
+                if (!isNaN(min) && !isNaN(max)) {
+                  priceConditions.push(`(price >= ${min} && price <= ${max})`);
+                }
+              } else if (range.toLowerCase().includes('over')) {
+                const overNumber = range.match(/[\d.]+/);
+                if (overNumber) {
+                  const min = parseFloat(overNumber[0]);
+                  if (!isNaN(min)) {
+                    priceConditions.push(`price >= ${min}`);
+                  }
+                }
               }
+            } catch (error) {
+              console.warn('Error parsing price range:', range, error);
             }
           });
 
           if (priceConditions.length > 0) {
-            query += ` && (${priceConditions.join(' || ')})`;
+            queryConditions.push(`(${priceConditions.join(' || ')})`);
           }
         }
 
-        query += `] {
-        _id,
-        name,
-        slug,
-        price,
-        originalPrice,
-        currency,
-        mainImageUrl,
-        imageUrls,
-        inStock,
-        material,
-        stone,
-        color,
-        size,
-        category,
-        featured,
-        _createdAt
-      }`;
+        // Build the main query
+        const whereClause = queryConditions.join(' && ');
+        let query = `*[${whereClause}] {
+          _id,
+          name,
+          slug,
+          price,
+          originalPrice,
+          currency,
+          mainImageUrl,
+          imageUrls,
+          inStock,
+          material,
+          stone,
+          color,
+          size,
+          category,
+          featured,
+          _createdAt
+        }`;
 
         // Add sorting
         switch (sortBy) {
@@ -196,21 +222,33 @@ const RingListing: React.FC<RingListingProps> = ({
           case 'TOP MATCH':
             query += ` | order(featured desc, _createdAt desc)`;
             break;
+          default:
+            query += ` | order(_createdAt desc)`;
+            break;
         }
 
+        // Add pagination
         const start = (page - 1) * PRODUCTS_PER_PAGE;
         const end = start + PRODUCTS_PER_PAGE;
         query += `[${start}...${end}]`;
 
+        console.log('Executing query:', query); // Debug log
+
         const result = await client.fetch(query);
         setRings(result);
 
-        // Get total count
-        const countQuery = query.split(']')[0] + ']';
-        const total = await client.fetch(`count(${countQuery})`);
+        // Get total count with the same conditions
+        const countQuery = `count(*[${whereClause}])`;
+        console.log('Executing count query:', countQuery); // Debug log
+
+        const total = await client.fetch(countQuery);
         setTotalPages(Math.ceil(total / PRODUCTS_PER_PAGE));
       } catch (error) {
         console.error('Error fetching rings:', error);
+        // On error, keep the current rings but stop loading
+        setIsLoading(false);
+        // Optionally show a user-friendly error message
+        // You might want to add error state management here
       } finally {
         setIsLoading(false);
       }
@@ -220,7 +258,16 @@ const RingListing: React.FC<RingListingProps> = ({
 
   useEffect(() => {
     fetchRings(currentPage);
-  }, [fetchRings, filters, sortBy, currentPage]);
+  }, [fetchRings, currentPage]);
+
+  // Separate effect for filter/sort changes to reset page
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchRings(1);
+    }
+  }, [filters, sortBy, fetchRings, currentPage]);
 
   const handleFilterChange = (
     filterType: keyof RingFilters,
@@ -230,7 +277,6 @@ const RingListing: React.FC<RingListingProps> = ({
       ...prev,
       [filterType]: value,
     }));
-    setCurrentPage(1);
   };
 
   const handleArrayFilterChange = (
@@ -248,7 +294,6 @@ const RingListing: React.FC<RingListingProps> = ({
         [filterType]: newValues,
       };
     });
-    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -262,7 +307,6 @@ const RingListing: React.FC<RingListingProps> = ({
       category: [],
       inStock: undefined,
     });
-    setCurrentPage(1);
   };
 
   const toggleFilterExpansion = (filterType: keyof typeof expandedFilters) => {
@@ -463,14 +507,24 @@ const RingListing: React.FC<RingListingProps> = ({
       </div>
 
       {/* Filter Bar */}
-      <div className="border-t border-b border-gray-200 py-4 mb-8">
+      <div className="border-t border-b border-gray-200 py-4 mb-4">
         <div className="flex justify-between items-center">
-          <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="text-sm font-medium cursor-pointer"
-          >
-            FILTER
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="text-sm font-medium cursor-pointer"
+            >
+              FILTER
+            </button>
+
+            {/* Desktop clear filters button */}
+            <button
+              onClick={clearFilters}
+              className="hidden md:block text-sm text-gray-600 hover:text-black transition-colors underline"
+            >
+              Clear all filters
+            </button>
+          </div>
 
           <span className="text-sm text-gray-600">{rings.length} PRODUCTS</span>
 
@@ -507,6 +561,16 @@ const RingListing: React.FC<RingListingProps> = ({
             )}
           </div>
         </div>
+      </div>
+
+      {/* Mobile clear filters button */}
+      <div className="md:hidden mb-4">
+        <button
+          onClick={clearFilters}
+          className="text-sm text-gray-600 hover:text-black transition-colors underline"
+        >
+          Clear all filters
+        </button>
       </div>
 
       {/* Main Content */}
@@ -727,6 +791,7 @@ const RingListing: React.FC<RingListingProps> = ({
                 )}
               </div>
 
+              {/* Keep the original clear filters button in sidebar for consistency */}
               <button
                 onClick={clearFilters}
                 className="w-full bg-yellow-400 text-black py-2 px-4 rounded-md hover:bg-yellow-500 font-medium"
