@@ -31,6 +31,7 @@ const Header = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -183,6 +184,16 @@ const Header = () => {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchOpen(false);
       setSearchQuery('');
+    }
+  };
+
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileSearchQuery.trim()) {
+      // Search across all product types
+      router.push(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setMobileMenuOpen(false);
+      setMobileSearchQuery('');
     }
   };
 
@@ -369,8 +380,8 @@ const Header = () => {
 
             {/* Right side icons */}
             <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="relative" ref={searchRef}>
+              {/* Search - Desktop Only */}
+              <div className="relative hidden md:block" ref={searchRef}>
                 <button
                   className="p-2 text-treva-text hover:text-treva-primary transition-colors cursor-pointer"
                   onClick={() => setSearchOpen(!searchOpen)}
@@ -579,20 +590,26 @@ const Header = () => {
                 </button>
               </div>
 
-              {/* Mobile Search */}
+              {/* Mobile Search - Fixed to prevent zoom and horizontal scroll */}
               <div className="border-t border-gray-100 pt-2 mt-2">
-                <form onSubmit={handleSearch} className="px-3 py-2">
-                  <div className="flex">
+                <form onSubmit={handleMobileSearch} className="px-3 py-2">
+                  <div className="flex w-full">
                     <input
                       type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={mobileSearchQuery}
+                      onChange={(e) => setMobileSearchQuery(e.target.value)}
                       placeholder="Search products..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-treva-primary focus:border-treva-primary text-sm"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-treva-primary focus:border-treva-primary text-sm min-w-0"
+                      style={{
+                        fontSize: '16px', // Prevents zoom on iOS
+                        transformOrigin: 'center center',
+                        transform: 'scale(1)',
+                        maxWidth: '100%',
+                      }}
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-treva-primary text-white rounded-r-md hover:bg-yellow-500 transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-treva-primary text-white rounded-r-md hover:bg-yellow-500 transition-colors cursor-pointer flex-shrink-0"
                     >
                       <Search className="h-4 w-4" />
                     </button>

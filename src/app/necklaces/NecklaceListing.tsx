@@ -495,7 +495,7 @@ const NecklaceListing: React.FC<NecklaceListingProps> = ({
             </button>
 
             {isSortOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-50">
                 {sortOptions.map((option) => (
                   <button
                     key={option}

@@ -55,7 +55,7 @@ const WishlistPage: React.FC = () => {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               Your Wishlist is Empty
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm mb-2">
               {items.length === 0
                 ? "You haven't added any items to your wishlist yet"
                 : `${items.length} item${items.length !== 1 ? 's' : ''} in your wishlist`}
@@ -86,7 +86,7 @@ const WishlistPage: React.FC = () => {
                 onClick={clearWishlist}
                 className="text-sm text-red-600 hover:text-red-700 transition-colors"
               >
-                Clear All
+                Clear All Wishlist Items
               </button>
             </div>
 

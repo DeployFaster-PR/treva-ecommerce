@@ -241,38 +241,40 @@ const SearchPage: React.FC = () => {
     }
 
     return (
-      <div className="flex justify-center items-center gap-2 mt-12">
+      <div className="flex justify-center items-center gap-2 mt-12 px-4">
         <button
           onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex-shrink-0"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
-        {pages.map((page, index) => (
-          <button
-            key={index}
-            onClick={() =>
-              typeof page === 'number' ? setCurrentPage(page) : null
-            }
-            disabled={typeof page !== 'number'}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
-              page === currentPage
-                ? 'bg-yellow-400 text-black font-medium'
-                : typeof page === 'number'
-                  ? 'border border-gray-300 hover:bg-gray-50 text-gray-700'
-                  : 'cursor-default text-gray-400'
-            }`}
-          >
-            {page}
-          </button>
-        ))}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          {pages.map((page, index) => (
+            <button
+              key={index}
+              onClick={() =>
+                typeof page === 'number' ? setCurrentPage(page) : null
+              }
+              disabled={typeof page !== 'number'}
+              className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors flex-shrink-0 ${
+                page === currentPage
+                  ? 'bg-yellow-400 text-black font-medium'
+                  : typeof page === 'number'
+                    ? 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+                    : 'cursor-default text-gray-400'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
 
         <button
           onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex-shrink-0"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -282,194 +284,209 @@ const SearchPage: React.FC = () => {
 
   if (!query) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Search Products</h1>
-          <p className="text-gray-500">Enter a search term to find products</p>
+      <div className="min-h-screen w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold mb-4">Search Products</h1>
+            <p className="text-gray-500">
+              Enter a search term to find products
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="text-sm text-gray-600 mb-4">
-        <span>Home</span> / <span>Search Results</span>
-      </div>
-
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">
-          Search Results for &quot;{query}&quot;
-        </h1>
-        <p className="text-gray-600">
-          {totalCount} {totalCount === 1 ? 'product' : 'products'} found
-        </p>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex space-x-4 mb-8 border-b border-gray-200">
-        {[
-          { key: 'all', label: 'All Products' },
-          { key: 'earring', label: 'Earrings' },
-          { key: 'necklace', label: 'Necklaces' },
-          { key: 'bracelet', label: 'Bracelets' },
-          { key: 'ring', label: 'Rings' },
-        ].map((filter) => (
-          <button
-            key={filter.key}
-            onClick={() => {
-              setSelectedFilter(filter.key);
-              setCurrentPage(1);
-            }}
-            className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
-              selectedFilter === filter.key
-                ? 'border-yellow-400 text-black'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Results */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(12)].map((_, index) => (
-            <div key={index} className="animate-pulse">
-              <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </div>
-          ))}
+    <div className="min-h-screen w-full overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="text-sm text-gray-600 mb-4 truncate">
+          <span>Home</span> / <span>Search Results</span>
         </div>
-      ) : products.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => {
-              const imageUrl = getImageUrl(product);
-              const productUrl = getProductUrl(product);
-              const isWishlisted = isInWishlist(product._id, product.size);
 
-              return (
-                <div key={`${product._type}-${product._id}`} className="group">
-                  <Link href={productUrl}>
-                    <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 cursor-pointer">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={product.name}
-                          width={400}
-                          height={400}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400">No Image</span>
-                        </div>
-                      )}
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">
+            Search Results for &quot;{query}&quot;
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {totalCount} {totalCount === 1 ? 'product' : 'products'} found
+          </p>
+        </div>
 
-                      {!product.inStock && (
-                        <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20">
-                          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-2">
-                            <span className="text-white font-medium text-sm tracking-wide">
-                              Out of Stock
+        {/* Filter Tabs - Horizontal scroll on mobile */}
+        <div className="mb-8 w-full overflow-x-hidden">
+          <div className="flex space-x-4 border-b border-gray-200 overflow-x-auto scrollbar-hide pb-0">
+            {[
+              { key: 'all', label: 'All Products' },
+              { key: 'earring', label: 'Earrings' },
+              { key: 'necklace', label: 'Necklaces' },
+              { key: 'bracelet', label: 'Bracelets' },
+              { key: 'ring', label: 'Rings' },
+            ].map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => {
+                  setSelectedFilter(filter.key);
+                  setCurrentPage(1);
+                }}
+                className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                  selectedFilter === filter.key
+                    ? 'border-yellow-400 text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(12)].map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {products.map((product) => {
+                const imageUrl = getImageUrl(product);
+                const productUrl = getProductUrl(product);
+                const isWishlisted = isInWishlist(product._id, product.size);
+
+                return (
+                  <div
+                    key={`${product._type}-${product._id}`}
+                    className="group w-full min-w-0"
+                  >
+                    <Link href={productUrl}>
+                      <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 cursor-pointer">
+                        {imageUrl ? (
+                          <Image
+                            src={imageUrl}
+                            alt={product.name}
+                            width={400}
+                            height={400}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">
+                              No Image
                             </span>
                           </div>
+                        )}
+
+                        {!product.inStock && (
+                          <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20">
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 max-w-[90%]">
+                              <span className="text-white font-medium text-xs sm:text-sm tracking-wide">
+                                Out of Stock
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Product Type Badge */}
+                        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium capitalize">
+                          {product._type}
                         </div>
-                      )}
 
-                      {/* Product Type Badge */}
-                      <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium capitalize">
-                        {product._type}
+                        {/* Wishlist Button */}
+                        <button
+                          className="absolute top-2 sm:top-4 right-2 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center transition-colors z-10"
+                          onClick={(e) => handleToggleWishlist(e, product)}
+                        >
+                          <Heart
+                            className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
+                              isWishlisted
+                                ? 'fill-red-500 text-red-500'
+                                : 'text-gray-600'
+                            }`}
+                          />
+                        </button>
+
+                        <button
+                          className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-yellow-400 text-black px-3 py-2 sm:px-4 rounded-xl text-xs sm:text-sm font-medium hover:bg-yellow-500 transition-colors z-10 disabled:bg-gray-300 disabled:cursor-not-allowed max-w-[calc(100%-1rem)]"
+                          onClick={(e) => handleAddToBag(e, product)}
+                          disabled={!product.inStock}
+                        >
+                          <span className="truncate">
+                            {product.inStock ? 'Add to bag' : 'Out of Stock'}
+                          </span>
+                        </button>
                       </div>
+                    </Link>
 
-                      {/* Wishlist Button */}
-                      <button
-                        className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center transition-colors z-10"
-                        onClick={(e) => handleToggleWishlist(e, product)}
-                      >
-                        <Heart
-                          className={`w-5 h-5 transition-colors ${
-                            isWishlisted
-                              ? 'fill-red-500 text-red-500'
-                              : 'text-gray-600'
-                          }`}
-                        />
-                      </button>
-
-                      <button
-                        className="absolute bottom-4 right-4 bg-yellow-400 text-black px-4 py-2 rounded-xl text-sm font-medium hover:bg-yellow-500 transition-colors z-10 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        onClick={(e) => handleAddToBag(e, product)}
-                        disabled={!product.inStock}
-                      >
-                        {product.inStock ? 'Add to bag' : 'Out of Stock'}
-                      </button>
-                    </div>
-                  </Link>
-
-                  <Link href={productUrl}>
-                    <div className="cursor-pointer">
-                      <h3 className="font-semibold text-lg mb-1 hover:text-gray-600 transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-2">
-                        {product.material}, {product.stone}
-                        {product.size && `, Size ${product.size}`}
-                      </p>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-600 text-sm">
-                          {product.currency === 'GBP'
-                            ? '£'
-                            : product.currency === 'USD'
-                              ? '$'
-                              : '€'}
-                          {product.price}
-                        </span>
-                        {product.originalPrice && (
-                          <span className="text-gray-400 line-through text-sm">
+                    <Link href={productUrl}>
+                      <div className="cursor-pointer min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg mb-1 hover:text-gray-600 transition-colors truncate">
+                          {product.name}
+                        </h3>
+                        <p className="text-gray-600 text-xs sm:text-sm mb-2 truncate">
+                          {product.material}, {product.stone}
+                          {product.size && `, Size ${product.size}`}
+                        </p>
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <span className="text-gray-600 text-sm flex-shrink-0">
                             {product.currency === 'GBP'
                               ? '£'
                               : product.currency === 'USD'
                                 ? '$'
                                 : '€'}
-                            {product.originalPrice}
+                            {product.price}
                           </span>
-                        )}
+                          {product.originalPrice && (
+                            <span className="text-gray-400 line-through text-sm flex-shrink-0">
+                              {product.currency === 'GBP'
+                                ? '£'
+                                : product.currency === 'USD'
+                                  ? '$'
+                                  : '€'}
+                              {product.originalPrice}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
 
-          {/* Pagination */}
-          {renderPagination()}
-        </>
-      ) : (
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold mb-4">No products found</h2>
-          <p className="text-gray-500 mb-6">
-            We couldn&apos;t find any products matching &quot;{query}&quot;. Try
-            adjusting your search terms.
-          </p>
-          <div className="text-sm text-gray-600">
-            <p className="mb-2">Search tips:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Check your spelling</li>
-              <li>Try more general keywords</li>
-              <li>Search by material, stone, or color</li>
-              <li>Browse our categories instead</li>
-            </ul>
+            {/* Pagination */}
+            {renderPagination()}
+          </>
+        ) : (
+          <div className="text-center py-12 px-4">
+            <h2 className="text-xl font-semibold mb-4">No products found</h2>
+            <p className="text-gray-500 mb-6 break-words">
+              We couldn&apos;t find any products matching &quot;{query}&quot;.
+              Try adjusting your search terms.
+            </p>
+            <div className="text-sm text-gray-600 max-w-md mx-auto">
+              <p className="mb-2">Search tips:</p>
+              <ul className="list-disc list-inside space-y-1 text-left">
+                <li>Check your spelling</li>
+                <li>Try more general keywords</li>
+                <li>Search by material, stone, or color</li>
+                <li>Browse our categories instead</li>
+              </ul>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

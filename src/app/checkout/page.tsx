@@ -316,10 +316,6 @@ const CheckoutPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                TREVA
-              </Link>
-              <span className="text-gray-400">|</span>
               <span className="text-lg font-medium text-gray-900">
                 Checkout
               </span>
