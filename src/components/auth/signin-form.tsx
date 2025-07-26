@@ -14,6 +14,7 @@ export function SignInForm() {
   // Check if user is already authenticated when component mounts
   useEffect(() => {
     checkAuthAndRedirect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
